@@ -227,7 +227,6 @@ const FirmaAutorizacion = ({ firmas, updateFirmas }) => {
             checked={firmas.autorizaDatos || false}
             onChange={(e) => updateFirmas({ autorizaDatos: e.target.checked })}
             className="mr-2"
-            required
           />
           <label htmlFor="autorizaDatos" className="text-sm">
             Confirmo que he informado al adulto mayor sobre esta autorización

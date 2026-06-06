@@ -7,8 +7,10 @@ import DatosFamiliar from './DatosFamiliar';
 import ContextoFamiliar from './ContextoFamiliar';
 import CondicionesSalud from './CondicionesSalud';
 import Observaciones from './Observaciones';
+import EvidenciaFotografica from './EvidenciaFotografica';
 import FirmaAutorizacion from './FirmaAutorizacion';
 import useFormData from '@/components/hooks/useFormData';
+import { generarActaPdf } from '@/lib/generarActaPdf';
 // Importar directamente las constantes
 import { HEADER_LOGO, FOOTER_BANNER } from './logoimages';
 
@@ -26,8 +28,11 @@ const ActaVisitaDomiciliaria = () => {
     updateAntecedentesClinico,
     updateObservaciones,
     updateFirmas,
+    updateFotos,
     resetFormData
   } = useFormData();
+
+  const [generandoPdf, setGenerandoPdf] = React.useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -40,11 +45,21 @@ const ActaVisitaDomiciliaria = () => {
   };
 
   const handleImprimir = () => {
-    // Validar los campos obligatorios antes de imprimir/generar el PDF.
-    if (formRef.current && !formRef.current.reportValidity()) {
-      return;
-    }
+    // Sin campos obligatorios: el acta puede imprimirse aunque falten datos
+    // (frecuente cuando no se encuentra a la persona, la dirección, etc.).
     window.print();
+  };
+
+  const handleDescargarPdf = async () => {
+    setGenerandoPdf(true);
+    try {
+      await generarActaPdf(formData);
+    } catch (error) {
+      console.error('Error al generar el PDF:', error);
+      alert('Ocurrió un error al generar el PDF. Revisa la consola para más detalle.');
+    } finally {
+      setGenerandoPdf(false);
+    }
   };
 
   const handleLimpiar = () => {
@@ -113,19 +128,34 @@ const ActaVisitaDomiciliaria = () => {
             />
           </div>
 
+          <div className="print:break-inside-avoid">
+            <EvidenciaFotografica
+              fotos={formData.fotos}
+              updateFotos={updateFotos}
+            />
+          </div>
+
           <FirmaAutorizacion
             firmas={formData.firmas}
             updateFirmas={updateFirmas}
           />
 
           {/* Botones de acción */}
-          <div className="flex justify-end space-x-4 mt-6 print:hidden">
+          <div className="flex flex-wrap justify-end gap-4 mt-6 print:hidden">
+            <button
+              type="button"
+              disabled={generandoPdf}
+              className="bg-indigo-600 text-white rounded-md px-6 py-2 font-medium hover:bg-indigo-700 disabled:opacity-60"
+              onClick={handleDescargarPdf}
+            >
+              {generandoPdf ? 'Generando PDF…' : 'Descargar PDF'}
+            </button>
             <button
               type="button"
               className="bg-gray-300 text-gray-800 rounded-md px-6 py-2 font-medium hover:bg-gray-400"
               onClick={handleImprimir}
             >
-              Imprimir / PDF
+              Imprimir
             </button>
             <button
               type="button"

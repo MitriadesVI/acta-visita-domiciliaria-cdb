@@ -3,7 +3,7 @@ import React from 'react';
 const DatosFamiliar = ({ datosFamiliares, updateDatosFamiliares, addFamiliar, removeFamiliar }) => {
   return (
     <div className="bg-gray-100 p-4 rounded-lg">
-      <h3 className="font-bold text-lg mb-4 text-center bg-gray-200 py-1">2. DATOS DE FAMILIARES ENCONTRADOS</h3>
+      <h3 className="font-bold text-lg mb-4 text-center bg-gray-200 py-1">2. DATOS DE FAMILIARES - RED DE APOYO ENCONTRADOS</h3>
       {datosFamiliares.map((familiar, index) => (
         <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 pb-4 border-b border-gray-300">
           <div className="md:col-span-1">

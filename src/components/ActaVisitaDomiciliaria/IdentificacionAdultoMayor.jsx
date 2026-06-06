@@ -12,7 +12,6 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosAdultoMayor.nombreApellido}
             onChange={(e) => updateDatosAdultoMayor({ nombreApellido: e.target.value })}
-            required
           />
         </div>
         <div className="flex gap-2">
@@ -22,7 +21,6 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
               value={datosAdultoMayor.tipoDocumento}
               onChange={(e) => updateDatosAdultoMayor({ tipoDocumento: e.target.value })}
-              required
             >
               <option value="CC">CC</option>
               <option value="CE">CE</option>
@@ -37,9 +35,17 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
               value={datosAdultoMayor.numeroDocumento}
               onChange={(e) => updateDatosAdultoMayor({ numeroDocumento: e.target.value })}
-              required
             />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Fecha de Expedición del Documento</label>
+          <input
+            type="date"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+            value={datosAdultoMayor.fechaExpedicion}
+            onChange={(e) => updateDatosAdultoMayor({ fechaExpedicion: e.target.value })}
+          />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">Dirección</label>
@@ -48,7 +54,6 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosAdultoMayor.direccion}
             onChange={(e) => updateDatosAdultoMayor({ direccion: e.target.value })}
-            required
           />
         </div>
         <div className="flex gap-2">
@@ -59,7 +64,6 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
               value={datosAdultoMayor.barrio}
               onChange={(e) => updateDatosAdultoMayor({ barrio: e.target.value })}
-              required
             />
           </div>
           <div className="w-1/3">
@@ -80,16 +84,16 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
               value={datosAdultoMayor.fechaNacimiento}
               onChange={(e) => updateDatosAdultoMayor({ fechaNacimiento: e.target.value })}
-              required
             />
           </div>
           <div className="w-1/2">
             <label className="block text-sm font-medium text-gray-700">Edad</label>
             <input
               type="text"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border bg-gray-50"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
+              placeholder="Ej: 75 — o NS/NA si no se sabe"
               value={datosAdultoMayor.edad}
-              readOnly
+              onChange={(e) => updateDatosAdultoMayor({ edad: e.target.value })}
             />
           </div>
         </div>
@@ -100,7 +104,6 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
               value={datosAdultoMayor.sexo}
               onChange={(e) => updateDatosAdultoMayor({ sexo: e.target.value })}
-              required
             >
               <option value="">Seleccione</option>
               <option value="F">F</option>
@@ -131,7 +134,6 @@ const IdentificacionAdultoMayor = ({ datosAdultoMayor, updateDatosAdultoMayor })
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
               value={datosAdultoMayor.estadoCivil}
               onChange={(e) => updateDatosAdultoMayor({ estadoCivil: e.target.value })}
-              required
             >
               <option value="Soltero">Soltero</option>
               <option value="Casado">Casado</option>

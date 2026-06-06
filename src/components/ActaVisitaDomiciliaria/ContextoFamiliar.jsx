@@ -9,7 +9,6 @@ const ContextoFamiliar = ({ situacionEncontrada, updateSituacionEncontrada }) =>
         value={situacionEncontrada}
         onChange={(e) => updateSituacionEncontrada(e.target.value)}
         placeholder="Describa el contexto familiar, las redes de apoyo y las condiciones socioeconómicas del adulto mayor..."
-        required
       />
     </div>
   );

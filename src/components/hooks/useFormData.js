@@ -39,6 +39,9 @@ const getInitialFormData = () => ({
     saludMental: ''
   },
   observaciones: '',
+  // Evidencia fotográfica de la visita (cada foto: { id, preview(base64),
+  // description, timestamp, source }).
+  fotos: [],
   // Firmas: una sola fuente de verdad, con la forma real que consume
   // FirmaAutorizacion. Cada firmante tiene un id estable para anclar el ref.
   firmas: {
@@ -170,6 +173,13 @@ const useFormData = () => {
     }));
   };
 
+  const updateFotos = (nuevasFotos) => {
+    setFormData(prevData => ({
+      ...prevData,
+      fotos: nuevasFotos
+    }));
+  };
+
   const resetFormData = () => {
     setFormData(getInitialFormData());
   };
@@ -186,6 +196,7 @@ const useFormData = () => {
     updateAntecedentesClinico,
     updateObservaciones,
     updateFirmas,
+    updateFotos,
     resetFormData
   };
 };

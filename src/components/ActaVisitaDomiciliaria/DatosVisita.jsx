@@ -11,7 +11,6 @@ const DatosVisita = ({ datosVisita, datosFuncionario, updateDatosVisita, updateD
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosVisita.fecha}
             onChange={(e) => updateDatosVisita({ fecha: e.target.value })}
-            required
           />
         </div>
         <div>
@@ -21,7 +20,6 @@ const DatosVisita = ({ datosVisita, datosFuncionario, updateDatosVisita, updateD
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosVisita.hora}
             onChange={(e) => updateDatosVisita({ hora: e.target.value })}
-            required
           />
         </div>
         <div>
@@ -31,7 +29,6 @@ const DatosVisita = ({ datosVisita, datosFuncionario, updateDatosVisita, updateD
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosVisita.ciudad}
             onChange={(e) => updateDatosVisita({ ciudad: e.target.value })}
-            required
           />
         </div>
         <div>
@@ -50,7 +47,6 @@ const DatosVisita = ({ datosVisita, datosFuncionario, updateDatosVisita, updateD
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosVisita.objetivoVisita}
             onChange={(e) => updateDatosVisita({ objetivoVisita: e.target.value })}
-            required
           />
         </div>
         <div className="md:col-span-3">
@@ -60,7 +56,6 @@ const DatosVisita = ({ datosVisita, datosFuncionario, updateDatosVisita, updateD
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border"
             value={datosFuncionario.nombreApellido}
             onChange={(e) => updateDatosFuncionario({ nombreApellido: e.target.value })}
-            required
           />
         </div>
       </div>

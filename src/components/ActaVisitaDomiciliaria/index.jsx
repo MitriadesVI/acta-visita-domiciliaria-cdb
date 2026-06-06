@@ -236,17 +236,18 @@ const ActaVisitaDomiciliaria = () => {
             />
           </div>
 
+          <FirmaAutorizacion
+            firmas={formData.firmas}
+            updateFirmas={updateFirmas}
+          />
+
+          {/* La evidencia fotográfica va al final, después de las firmas */}
           <div>
             <EvidenciaFotografica
               fotos={formData.fotos}
               updateFotos={updateFotos}
             />
           </div>
-
-          <FirmaAutorizacion
-            firmas={formData.firmas}
-            updateFirmas={updateFirmas}
-          />
 
           {/* Botones de acción */}
           <div className="flex flex-wrap justify-end gap-4 mt-6 print:hidden">

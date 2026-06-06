@@ -99,16 +99,16 @@ const EvidenciaFotografica = ({ fotos, updateFotos }) => {
       {(!fotos || fotos.length === 0) ? (
         <p className="text-sm text-gray-500 italic">Sin fotos agregadas.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 print:grid-cols-1 print:gap-6">
           {fotos.map((foto, index) => (
-            <div key={foto.id} className="bg-white rounded-md shadow-sm p-2 print:break-inside-avoid">
+            <div key={foto.id} className="bg-white rounded-md shadow-sm p-2 print:break-inside-avoid print:shadow-none print:border print:border-gray-300 print:p-3">
               <img
                 src={foto.preview}
                 alt={`Foto ${index + 1}`}
-                className="w-full h-40 object-cover rounded"
+                className="w-full h-40 object-cover rounded print:h-auto print:max-h-[13cm] print:object-contain print:mx-auto"
               />
-              <div className="flex items-center justify-between mt-1">
-                <span className="text-xs text-gray-500">Foto #{index + 1}</span>
+              <div className="flex items-center justify-between mt-1 print:justify-center">
+                <span className="text-xs text-gray-500 print:text-sm print:font-medium print:text-gray-700">Foto #{index + 1}</span>
                 <button
                   type="button"
                   onClick={() => eliminarFoto(foto.id)}
@@ -126,7 +126,7 @@ const EvidenciaFotografica = ({ fotos, updateFotos }) => {
                 onChange={(e) => actualizarDescripcion(foto.id, e.target.value)}
               />
               {foto.description && (
-                <p className="hidden print:block text-xs whitespace-pre-wrap break-words mt-1">{foto.description}</p>
+                <p className="hidden print:block text-sm whitespace-pre-wrap break-words mt-1 text-center text-gray-700">{foto.description}</p>
               )}
             </div>
           ))}

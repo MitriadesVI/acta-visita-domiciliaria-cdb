@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { FileText, Trash2, Pencil, Plus, RefreshCw } from 'lucide-react';
+import { FileText, Trash2, Pencil, Plus, RefreshCw, Cloud, CloudOff } from 'lucide-react';
 import { listarActas, eliminarActa, cambiarEstado, ESTADOS } from '@/lib/actasDb';
+import SyncBar from './SyncBar';
 
 const colorEstado = {
   borrador: 'bg-gray-200 text-gray-800',
@@ -63,6 +64,8 @@ const MisActas = ({ onAbrir, onNueva, actaActivaId }) => {
         </div>
       </div>
 
+      <SyncBar onSynced={recargar} />
+
       {cargando ? (
         <p className="text-gray-500">Cargando…</p>
       ) : actas.length === 0 ? (
@@ -85,6 +88,21 @@ const MisActas = ({ onAbrir, onNueva, actaActivaId }) => {
                 <p className="text-sm text-gray-500">
                   {acta.fecha ? `Visita: ${acta.fecha} · ` : ''}Editada: {formatFecha(acta.lastUpdated)}
                 </p>
+                <span
+                  className={`inline-flex items-center text-xs mt-1 ${
+                    acta.syncStatus === 'synced' ? 'text-green-600' : 'text-gray-400'
+                  }`}
+                >
+                  {acta.syncStatus === 'synced' ? (
+                    <>
+                      <Cloud size={12} className="mr-1" /> Sincronizada
+                    </>
+                  ) : (
+                    <>
+                      <CloudOff size={12} className="mr-1" /> Sin sincronizar
+                    </>
+                  )}
+                </span>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">

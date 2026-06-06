@@ -12,6 +12,11 @@ export const ESTADOS = {
   impresa: 'Impresa / finalizada'
 };
 
+const nuevoUuid = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
 // Init perezosa: solo se instancia en el navegador (evita tocar IndexedDB en SSR).
 let _db = null;
 const getDb = () => {
@@ -22,6 +27,17 @@ const getDb = () => {
       // ++id autoincremental; campos indexados para listar/ordenar rápido.
       actas: '++id, estado, lastUpdated, nombreAdultoMayor, fecha'
     });
+    // v2: campos para sincronización con el backend (uuid estable + estado de sync).
+    _db.version(2)
+      .stores({
+        actas: '++id, estado, lastUpdated, nombreAdultoMayor, fecha, uuid, syncStatus'
+      })
+      .upgrade(async (tx) => {
+        await tx.table('actas').toCollection().modify((a) => {
+          if (!a.uuid) a.uuid = nuevoUuid();
+          if (!a.syncStatus) a.syncStatus = 'pending';
+        });
+      });
   }
   return _db;
 };
@@ -68,6 +84,11 @@ export const guardarActa = async (formData, { id = null, estado = 'borrador' } =
     ...resumen(formData),
     estado: estado || base?.estado || 'borrador',
     formData,
+    uuid: base?.uuid || nuevoUuid(),
+    // Cualquier cambio local marca la acta como pendiente de sincronizar.
+    syncStatus: 'pending',
+    remoteId: base?.remoteId || null,
+    lastSyncedAt: base?.lastSyncedAt || null,
     lastUpdated: new Date().toISOString(),
     createdAt: base?.createdAt || new Date().toISOString()
   };
@@ -100,5 +121,23 @@ export const eliminarActa = async (id) => {
 export const cambiarEstado = async (id, estado) => {
   const db = getDb();
   if (!db) return;
-  await db.actas.update(id, { estado, lastUpdated: new Date().toISOString() });
+  // Cambiar el estado también deja la acta pendiente de re-sincronizar.
+  await db.actas.update(id, { estado, syncStatus: 'pending', lastUpdated: new Date().toISOString() });
+};
+
+// --- Sincronización ---
+export const listarPendientes = async () => {
+  const db = getDb();
+  if (!db) return [];
+  return db.actas.where('syncStatus').equals('pending').toArray();
+};
+
+export const marcarSincronizada = async (id, remoteId) => {
+  const db = getDb();
+  if (!db) return;
+  await db.actas.update(id, {
+    syncStatus: 'synced',
+    remoteId,
+    lastSyncedAt: new Date().toISOString()
+  });
 };

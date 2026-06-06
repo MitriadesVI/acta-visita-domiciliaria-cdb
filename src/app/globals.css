@@ -128,16 +128,23 @@
   }
 }
 
-/* Estilos de impresión: el acta sale limpia para "Guardar como PDF". */
+/* Estilos de impresión / "Guardar como PDF". El acta sale fiel al formulario,
+   con bordes nítidos. Las cajas de texto (salud, contexto, observaciones)
+   crecen con su contenido porque en impresión se renderizan como bloque. */
 @media print {
-  /* Fondo blanco y sin márgenes extra de la app */
   body {
     background: #fff !important;
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  /* La tarjeta del acta ocupa toda la página, sin sombras ni bordes */
+  /* Respetar colores de fondo (membrete, barras de sección) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* La tarjeta del acta ocupa toda la página, sin sombras ni bordes externos */
   .acta-print {
     box-shadow: none !important;
     border: none !important;
@@ -146,20 +153,34 @@
     padding: 0 !important;
   }
 
-  /* Evitar que las secciones se partan entre páginas */
-  .acta-print [class*="break-inside-avoid"],
+  /* Bordes limpios y legibles en los campos de una línea */
+  .acta-print input,
+  .acta-print select {
+    border: 1px solid #6b7280 !important;
+    border-radius: 4px;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* Las secciones grises mantienen su caja para dar estructura */
+  .acta-print .bg-gray-100 {
+    border: 1px solid #d1d5db;
+    break-inside: auto;
+  }
+
+  /* No partir bloques pequeños (una firma, una foto) entre páginas */
   .acta-print .print\:break-inside-avoid {
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* Forzar la impresión de fondos/colores (firmas, encabezados) */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+  /* Imágenes (membrete, firmas, fotos) sin recortes */
+  .acta-print img {
+    max-width: 100% !important;
   }
 
   @page {
-    margin: 1.5cm;
+    margin: 1.2cm;
   }
 }

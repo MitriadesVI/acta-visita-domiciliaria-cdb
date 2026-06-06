@@ -119,12 +119,15 @@ const EvidenciaFotografica = ({ fotos, updateFotos }) => {
                 </button>
               </div>
               <textarea
-                className="w-full mt-1 rounded-md border-gray-300 shadow-sm p-2 border text-sm"
+                className="w-full mt-1 rounded-md border-gray-300 shadow-sm p-2 border text-sm print:hidden"
                 rows={2}
                 placeholder="Descripción de la foto..."
                 value={foto.description}
                 onChange={(e) => actualizarDescripcion(foto.id, e.target.value)}
               />
+              {foto.description && (
+                <p className="hidden print:block text-xs whitespace-pre-wrap break-words mt-1">{foto.description}</p>
+              )}
             </div>
           ))}
         </div>

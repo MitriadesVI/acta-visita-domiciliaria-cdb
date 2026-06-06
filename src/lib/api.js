@@ -15,44 +15,58 @@ export const clearToken = () => {
   if (typeof window !== 'undefined') localStorage.removeItem(TOKEN_KEY);
 };
 
-async function authFetch(path, opts = {}) {
+// Helper genérico: agrega el token, parsea JSON y lanza errores claros.
+async function request(path, { method = 'GET', body, form } = {}) {
   const token = getToken();
-  return fetch(`${API_URL}${path}`, {
-    ...opts,
-    headers: {
-      ...(opts.headers || {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let payload;
+  if (form) {
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    payload = new URLSearchParams(form);
+  } else if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    payload = JSON.stringify(body);
+  }
+  const res = await fetch(`${API_URL}${path}`, { method, headers, body: payload });
+  if (res.status === 401) throw new Error('NO_AUTH');
+  if (!res.ok) {
+    let detail = `Error ${res.status}`;
+    try {
+      const j = await res.json();
+      if (j.detail) detail = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail);
+    } catch {
+      /* sin cuerpo JSON */
     }
-  });
+    throw new Error(detail);
+  }
+  if (res.status === 204) return null;
+  return res.json();
 }
 
+// ---- Auth ----
 export async function login(email, password) {
-  // El endpoint usa OAuth2PasswordRequestForm (campo "username" = email).
-  const body = new URLSearchParams({ username: email, password });
-  const res = await fetch(`${API_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
-  });
-  if (!res.ok) throw new Error('Email o contraseña incorrectos');
-  const data = await res.json();
+  const data = await request('/auth/login', { method: 'POST', form: { username: email, password } });
   setToken(data.access_token);
   return data;
 }
+export const getMe = () => request('/auth/me');
 
-export async function getMe() {
-  const res = await authFetch('/auth/me');
-  if (!res.ok) throw new Error('Sesión inválida');
-  return res.json();
-}
+// ---- Actas (sync) ----
+export const upsertActa = (payload) => request('/actas', { method: 'POST', body: payload });
 
-export async function upsertActa(payload) {
-  const res = await authFetch('/actas', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (res.status === 401) throw new Error('NO_AUTH');
-  if (!res.ok) throw new Error('Error al sincronizar el acta');
-  return res.json();
-}
+// ---- Usuarios ----
+export const listUsuarios = () => request('/usuarios');
+export const createUsuario = (data) => request('/usuarios', { method: 'POST', body: data });
+export const updateUsuario = (id, data) => request(`/usuarios/${id}`, { method: 'PATCH', body: data });
+
+// ---- Casos ----
+export const listCasos = (estado) => request(`/casos${estado ? `?estado=${encodeURIComponent(estado)}` : ''}`);
+export const createCaso = (data) => request('/casos', { method: 'POST', body: data });
+export const updateCaso = (id, data) => request(`/casos/${id}`, { method: 'PATCH', body: data });
+
+// ---- Visitas ----
+export const listVisitas = () => request('/visitas');
+export const createVisita = (data) => request('/visitas', { method: 'POST', body: data });
+export const updateVisita = (id, data) => request(`/visitas/${id}`, { method: 'PATCH', body: data });
+export const deleteVisita = (id) => request(`/visitas/${id}`, { method: 'DELETE' });

@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # Tailwind CSS v4 y Next 15 requieren Node 20+. Fijamos la versión que
+  # usamos para verificar el build localmente y evitar el default viejo de Netlify.
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

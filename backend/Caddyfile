@@ -1,0 +1,16 @@
+# Reemplaza los dominios por los tuyos. Caddy gestiona el TLS automáticamente.
+
+# API
+api.tudominio.gov.co {
+    reverse_proxy api:8000
+}
+
+# Archivos públicos (fotos/firmas) servidos desde MinIO
+files.tudominio.gov.co {
+    reverse_proxy minio:9000
+}
+
+# Para pruebas locales sin dominio, puedes usar en su lugar:
+# :8080 {
+#     reverse_proxy api:8000
+# }

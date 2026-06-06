@@ -11,7 +11,7 @@ router = APIRouter(prefix="/actas", tags=["actas"])
 
 
 def _puede_ver(user: Usuario, acta: Acta) -> bool:
-    return user.rol in ("admin", "supervisor") or acta.usuario_id == user.id
+    return user.rol in ("admin", "coordinador") or acta.usuario_id == user.id
 
 
 @router.get("", response_model=list[ActaOut])
@@ -21,8 +21,8 @@ def listar(
     user: Usuario = Depends(get_current_user),
 ):
     q = db.query(Acta)
-    # Campo/apoyo: solo sus actas. Admin/supervisor: todas.
-    if user.rol in ("campo", "apoyo"):
+    # Técnico: solo sus actas. Admin/coordinador: todas.
+    if user.rol == "tecnico":
         q = q.filter(Acta.usuario_id == user.id)
     if estado:
         q = q.filter(Acta.estado == estado)

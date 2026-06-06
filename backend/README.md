@@ -13,22 +13,31 @@ en Netlify y consume esta API.
 
 ## Modelo de datos
 
-- `usuarios` — roles: **admin**, **supervisor**, **apoyo**, **campo**.
-- `casos` — `codigo` ÚNICO que enlaza todo (intake → visita → acta → aprobación).
+- `usuarios` — roles: **admin**, **coordinador**, **tecnico**.
+- `casos` — `codigo` (radicado) ÚNICO que enlaza todo. Estado del flujo real:
+  `recibido → agendado → (no_ubicado | valorado) → en_comite → resuelto → cerrado`.
+  Incluye `direccion`, `fecha_recibido`, `resultado` (aplica/no_aplica/remitir),
+  `observacion` y `enviado_juridica`.
 - `visitas` — agendamiento con histórico (quién, cuándo, estado).
 - `actas` — `form_data` (JSONB) + `local_uuid` para sync idempotente.
 - `archivos` — fotos/firmas en storage, referenciadas por URL.
 
-## Roles (resumen)
+> El **concepto jurídico** NO se autoría en la app (se hace por correo/WhatsApp).
+> La app solo rastrea el caso para evitar que se pierda en el seguimiento.
 
-| Acción | admin | supervisor | apoyo / campo |
+## Roles
+
+| Acción | admin | coordinador | tecnico |
 |---|---|---|---|
-| Gestionar usuarios | ✅ | — | — |
+| Gestionar usuarios | ✅ | ver | — |
 | Crear/editar casos | ✅ | ✅ | — |
-| Agendar visitas | ✅ | ✅ | — |
-| Ver alertas (aprobado sin acta) | ✅ | ✅ | — |
+| Agendar visitas / cronograma / cerrar | ✅ | ✅ | — |
 | Crear/editar **sus** actas | ✅ | ✅ | ✅ |
-| Ver **todas** las actas/casos | ✅ | ✅ | solo asignados |
+| Ver **todo** el flujo (casos/visitas/actas) | ✅ | ✅ | solo asignados |
+
+- **admin** = quien define usuarios y roles.
+- **coordinador** = jefe jurídico y persona administrativa (agendan, revisan correos, cierran).
+- **tecnico** = equipo de campo que realiza visitas y diligencia actas.
 
 ## Endpoints principales
 
@@ -37,7 +46,6 @@ POST   /auth/login                          # JWT (username = email)
 GET    /auth/me
 GET    /usuarios            POST /usuarios            PATCH /usuarios/{id}
 GET    /casos              POST /casos               PATCH /casos/{id}   GET /casos/{id}
-GET    /casos/alertas/aprobados-sin-acta    # anti-join de seguimiento
 GET    /visitas           POST /visitas             PATCH /visitas/{id}  DELETE /visitas/{id}
 GET    /actas             POST /actas (upsert sync) GET /actas/{id}      DELETE /actas/{id}
 POST   /actas/{id}/archivos                 # sube foto/firma a storage

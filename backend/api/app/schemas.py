@@ -40,11 +40,15 @@ class CasoBase(BaseModel):
     codigo: str
     nombre_adulto_mayor: Optional[str] = None
     documento: Optional[str] = None
-    estado: str = "nuevo"
+    direccion: Optional[str] = None
+    barrio: Optional[str] = None
+    fecha_recibido: Optional[date] = None
     origen: str = "manual"
     correo_msg_id: Optional[str] = None
-    aprobado: bool = False
-    fecha_aprobacion: Optional[date] = None
+    estado: str = "recibido"
+    resultado: Optional[str] = None
+    observacion: Optional[str] = None
+    enviado_juridica: bool = False
     asignado_a: Optional[str] = None
 
 
@@ -55,9 +59,13 @@ class CasoCreate(CasoBase):
 class CasoUpdate(BaseModel):
     nombre_adulto_mayor: Optional[str] = None
     documento: Optional[str] = None
+    direccion: Optional[str] = None
+    barrio: Optional[str] = None
+    fecha_recibido: Optional[date] = None
     estado: Optional[str] = None
-    aprobado: Optional[bool] = None
-    fecha_aprobacion: Optional[date] = None
+    resultado: Optional[str] = None
+    observacion: Optional[str] = None
+    enviado_juridica: Optional[bool] = None
     asignado_a: Optional[str] = None
 
 

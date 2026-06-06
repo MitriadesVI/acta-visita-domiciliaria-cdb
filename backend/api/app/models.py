@@ -11,9 +11,12 @@ from .database import Base
 
 
 # ---- Valores permitidos (documentados; columnas String para migraciones simples) ----
-ROLES = ("admin", "supervisor", "apoyo", "campo")
-ESTADO_CASO = ("nuevo", "asignado", "en_proceso", "visitado", "aprobado", "rechazado", "cerrado")
-ESTADO_VISITA = ("pendiente", "realizada", "cancelada", "reprogramada")
+ROLES = ("admin", "coordinador", "tecnico")
+# Ciclo de vida del caso (flujo real del Programa Adulto Mayor):
+# recibido -> agendado -> (no_ubicado | valorado) -> en_comite -> resuelto -> cerrado
+ESTADO_CASO = ("recibido", "agendado", "no_ubicado", "valorado", "en_comite", "resuelto", "cerrado")
+RESULTADO_CASO = ("aplica", "no_aplica", "remitir")
+ESTADO_VISITA = ("pendiente", "realizada", "no_ubicado", "cancelada", "reprogramada")
 ESTADO_ACTA = ("borrador", "en_hold", "lista", "impresa")
 ORIGEN_CASO = ("manual", "correo")
 
@@ -28,7 +31,7 @@ class Usuario(Base):
     id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
     email = Column(String, unique=True, nullable=False, index=True)
     nombre = Column(String, nullable=False)
-    rol = Column(String, nullable=False, default="campo")  # ver ROLES
+    rol = Column(String, nullable=False, default="tecnico")  # ver ROLES
     password_hash = Column(String, nullable=False)
     activo = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -38,14 +41,18 @@ class Caso(Base):
     __tablename__ = "casos"
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
-    codigo = Column(String, unique=True, nullable=False, index=True)  # ID único que enlaza todo
+    codigo = Column(String, unique=True, nullable=False, index=True)  # radicado, ID único que enlaza todo
     nombre_adulto_mayor = Column(String, nullable=True)
     documento = Column(String, nullable=True)
-    estado = Column(String, nullable=False, default="nuevo", index=True)  # ver ESTADO_CASO
+    direccion = Column(String, nullable=True)
+    barrio = Column(String, nullable=True)
+    fecha_recibido = Column(Date, nullable=True)  # fecha del correo de intake
     origen = Column(String, nullable=False, default="manual")  # ver ORIGEN_CASO
     correo_msg_id = Column(String, nullable=True)  # link al correo de intake (Fase 3 / Hermes)
-    aprobado = Column(Boolean, nullable=False, default=False, index=True)
-    fecha_aprobacion = Column(Date, nullable=True)
+    estado = Column(String, nullable=False, default="recibido", index=True)  # ver ESTADO_CASO
+    resultado = Column(String, nullable=True)  # ver RESULTADO_CASO (al resolver)
+    observacion = Column(Text, nullable=True)  # nota breve de cierre / WhatsApp
+    enviado_juridica = Column(Boolean, nullable=False, default=False)  # concepto remitido a oficina jurídica
     asignado_a = Column(UUID(as_uuid=False), ForeignKey("usuarios.id"), nullable=True)
     creado_por = Column(UUID(as_uuid=False), ForeignKey("usuarios.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

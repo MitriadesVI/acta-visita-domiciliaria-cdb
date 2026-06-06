@@ -21,8 +21,8 @@ def listar(
         q = q.filter(Visita.caso_id == caso_id)
     if estado:
         q = q.filter(Visita.estado == estado)
-    # Campo: solo sus visitas asignadas.
-    if user.rol in ("campo", "apoyo"):
+    # Técnico: solo sus visitas asignadas.
+    if user.rol == "tecnico":
         q = q.filter(Visita.usuario_id == user.id)
     return q.order_by(Visita.fecha_programada.desc()).all()
 
@@ -31,18 +31,18 @@ def listar(
 def agendar(
     data: VisitaCreate,
     db: Session = Depends(get_db),
-    user: Usuario = Depends(require_roles("admin", "supervisor")),
+    user: Usuario = Depends(require_roles("admin", "coordinador")),
 ):
     if not db.query(Caso).filter(Caso.id == data.caso_id).first():
         raise HTTPException(404, "El caso indicado no existe")
     visita = Visita(**data.model_dump(), creado_por=user.id)
     db.add(visita)
-    # Al agendar, el caso pasa a 'asignado' si estaba 'nuevo'.
+    # Al agendar, el caso pasa a 'agendado' si estaba 'recibido'.
     caso = db.query(Caso).filter(Caso.id == data.caso_id).first()
-    if caso and caso.estado == "nuevo":
-        caso.estado = "asignado"
-        if data.usuario_id:
-            caso.asignado_a = data.usuario_id
+    if caso and caso.estado == "recibido":
+        caso.estado = "agendado"
+    if caso and data.usuario_id:
+        caso.asignado_a = data.usuario_id
     db.commit()
     db.refresh(visita)
     return visita
@@ -53,7 +53,7 @@ def actualizar(
     visita_id: str,
     data: VisitaUpdate,
     db: Session = Depends(get_db),
-    _=Depends(require_roles("admin", "supervisor")),
+    _=Depends(require_roles("admin", "coordinador")),
 ):
     visita = db.query(Visita).filter(Visita.id == visita_id).first()
     if not visita:
@@ -69,7 +69,7 @@ def actualizar(
 def eliminar(
     visita_id: str,
     db: Session = Depends(get_db),
-    _=Depends(require_roles("admin", "supervisor")),
+    _=Depends(require_roles("admin", "coordinador")),
 ):
     visita = db.query(Visita).filter(Visita.id == visita_id).first()
     if not visita:

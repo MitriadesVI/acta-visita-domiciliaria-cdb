@@ -127,3 +127,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos de impresión: el acta sale limpia para "Guardar como PDF". */
+@media print {
+  /* Fondo blanco y sin márgenes extra de la app */
+  body {
+    background: #fff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* La tarjeta del acta ocupa toda la página, sin sombras ni bordes */
+  .acta-print {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Evitar que las secciones se partan entre páginas */
+  .acta-print [class*="break-inside-avoid"],
+  .acta-print .print\:break-inside-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Forzar la impresión de fondos/colores (firmas, encabezados) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+}

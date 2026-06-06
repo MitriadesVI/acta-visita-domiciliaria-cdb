@@ -184,6 +184,12 @@ const useFormData = () => {
     setFormData(getInitialFormData());
   };
 
+  // Carga un acta guardada, completando con los valores por defecto cualquier
+  // campo que falte (compatibilidad hacia atrás con actas antiguas).
+  const loadFormData = (data) => {
+    setFormData({ ...getInitialFormData(), ...(data || {}) });
+  };
+
   return {
     formData,
     updateDatosVisita,
@@ -197,7 +203,8 @@ const useFormData = () => {
     updateObservaciones,
     updateFirmas,
     updateFotos,
-    resetFormData
+    resetFormData,
+    loadFormData
   };
 };
 

@@ -1,6 +1,7 @@
 "use client";
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { FolderOpen, FilePlus, Check, Loader2 } from 'lucide-react';
 import DatosVisita from './DatosVisita';
 import IdentificacionAdultoMayor from './IdentificacionAdultoMayor';
 import DatosFamiliar from './DatosFamiliar';
@@ -9,8 +10,10 @@ import CondicionesSalud from './CondicionesSalud';
 import Observaciones from './Observaciones';
 import EvidenciaFotografica from './EvidenciaFotografica';
 import FirmaAutorizacion from './FirmaAutorizacion';
+import MisActas from './MisActas';
 import useFormData from '@/components/hooks/useFormData';
 import { generarActaPdf } from '@/lib/generarActaPdf';
+import { guardarActa, obtenerActa, tieneDatos, ESTADOS } from '@/lib/actasDb';
 // Importar directamente las constantes
 import { HEADER_LOGO, FOOTER_BANNER } from './logoimages';
 
@@ -29,19 +32,86 @@ const ActaVisitaDomiciliaria = () => {
     updateObservaciones,
     updateFirmas,
     updateFotos,
-    resetFormData
+    resetFormData,
+    loadFormData
   } = useFormData();
 
-  const [generandoPdf, setGenerandoPdf] = React.useState(false);
+  const [vista, setVista] = useState('editor'); // 'editor' | 'lista'
+  const [actaId, setActaId] = useState(null);
+  const [estado, setEstado] = useState('borrador');
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [guardadoEn, setGuardadoEn] = useState(null);
+
+  const actaIdRef = useRef(null);
+  const saltarAutosave = useRef(false);
+
+  // Autoguardado local (debounced): protege el trabajo de campo aunque se
+  // cierre la app o se caiga la conexión. Solo guarda si hay datos reales.
+  useEffect(() => {
+    if (vista !== 'editor') return;
+    if (saltarAutosave.current) {
+      saltarAutosave.current = false;
+      return;
+    }
+    if (!tieneDatos(formData)) return;
+    const t = setTimeout(async () => {
+      setGuardando(true);
+      try {
+        const id = await guardarActa(formData, { id: actaIdRef.current, estado });
+        if (!actaIdRef.current) {
+          actaIdRef.current = id;
+          setActaId(id);
+        }
+        setGuardadoEn(new Date());
+      } catch (e) {
+        console.error('Error al autoguardar:', e);
+      } finally {
+        setGuardando(false);
+      }
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [formData, estado, vista]);
+
+  const nuevaActa = () => {
+    resetFormData();
+    actaIdRef.current = null;
+    setActaId(null);
+    setEstado('borrador');
+    setGuardadoEn(null);
+    setVista('editor');
+  };
+
+  const abrirActa = async (id) => {
+    const acta = await obtenerActa(id);
+    if (!acta) return;
+    saltarAutosave.current = true;
+    loadFormData(acta.formData);
+    actaIdRef.current = id;
+    setActaId(id);
+    setEstado(acta.estado || 'borrador');
+    setGuardadoEn(acta.lastUpdated ? new Date(acta.lastUpdated) : null);
+    setVista('editor');
+  };
+
+  const guardarBorrador = async () => {
+    setGuardando(true);
+    try {
+      const id = await guardarActa(formData, { id: actaIdRef.current, estado });
+      actaIdRef.current = id;
+      setActaId(id);
+      setGuardadoEn(new Date());
+    } catch (e) {
+      console.error('Error al guardar:', e);
+      alert('No se pudo guardar el acta en este dispositivo.');
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Guardar en localStorage para demostración
-    localStorage.setItem(`visita_${Date.now()}`, JSON.stringify(formData));
-
-    // Aquí podrías enviar a un servidor si hay conexión
-    alert('Acta guardada correctamente');
+    guardarBorrador();
   };
 
   const handleImprimir = () => {
@@ -62,15 +132,66 @@ const ActaVisitaDomiciliaria = () => {
     }
   };
 
-  const handleLimpiar = () => {
-    if (window.confirm('¿Seguro que deseas limpiar toda el acta? Se perderán los datos no guardados.')) {
-      resetFormData();
-    }
-  };
+  if (vista === 'lista') {
+    return (
+      <Card className="w-full max-w-4xl mx-auto bg-white shadow-lg">
+        <CardContent className="p-6">
+          <MisActas onAbrir={abrirActa} onNueva={nuevaActa} actaActivaId={actaId} />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-4xl mx-auto bg-white shadow-lg acta-print">
       <CardContent className="p-6">
+        {/* Barra de gestión del acta (no se imprime) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 print:hidden">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setVista('lista')}
+              className="flex items-center text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300"
+            >
+              <FolderOpen size={16} className="mr-1" /> Mis Actas
+            </button>
+            <button
+              type="button"
+              onClick={nuevaActa}
+              className="flex items-center text-sm bg-gray-200 text-gray-800 px-3 py-2 rounded hover:bg-gray-300"
+            >
+              <FilePlus size={16} className="mr-1" /> Nueva acta
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="text-sm text-gray-600">Estado:</label>
+            <select
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+              className="text-sm rounded-md border-gray-300 shadow-sm p-1.5 border"
+            >
+              {Object.entries(ESTADOS).map(([k, label]) => (
+                <option key={k} value={k}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-gray-500 min-w-[110px] text-right">
+              {guardando ? (
+                <span className="flex items-center justify-end">
+                  <Loader2 size={12} className="mr-1 animate-spin" /> Guardando…
+                </span>
+              ) : guardadoEn ? (
+                <span className="flex items-center justify-end text-green-600">
+                  <Check size={12} className="mr-1" /> Guardado
+                </span>
+              ) : (
+                'Sin guardar'
+              )}
+            </span>
+          </div>
+        </div>
+
         {/* Usar HEADER_LOGO como una sola imagen para el encabezado */}
         <div className="mb-6">
           <img
@@ -156,13 +277,6 @@ const ActaVisitaDomiciliaria = () => {
               onClick={handleImprimir}
             >
               Imprimir
-            </button>
-            <button
-              type="button"
-              className="bg-red-500 text-white rounded-md px-6 py-2 font-medium hover:bg-red-600"
-              onClick={handleLimpiar}
-            >
-              Limpiar
             </button>
             <button
               type="submit"

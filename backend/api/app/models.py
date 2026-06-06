@@ -18,7 +18,7 @@ ESTADO_CASO = ("recibido", "agendado", "no_ubicado", "valorado", "en_comite", "r
 RESULTADO_CASO = ("aplica", "no_aplica", "remitir")
 ESTADO_VISITA = ("pendiente", "realizada", "no_ubicado", "cancelada", "reprogramada")
 ESTADO_ACTA = ("borrador", "en_hold", "lista", "impresa")
-ORIGEN_CASO = ("manual", "correo")
+ORIGEN_CASO = ("correo", "oficio", "redes", "manual")
 
 
 def _uuid():
@@ -41,18 +41,30 @@ class Caso(Base):
     __tablename__ = "casos"
 
     id = Column(UUID(as_uuid=False), primary_key=True, default=_uuid)
-    codigo = Column(String, unique=True, nullable=False, index=True)  # radicado, ID único que enlaza todo
+    # Radicado. OPCIONAL: los casos de oficio/redes llegan sin radicado.
+    # Postgres permite múltiples NULL en una columna unique (no choca entre sí).
+    codigo = Column(String, unique=True, nullable=True, index=True)
+    radicados_relacionados = Column(String, nullable=True)  # otros radicados del mismo caso (Sonia Padilla = 2)
     nombre_adulto_mayor = Column(String, nullable=True)
     documento = Column(String, nullable=True)
     direccion = Column(String, nullable=True)
     barrio = Column(String, nullable=True)
-    fecha_recibido = Column(Date, nullable=True)  # fecha del correo de intake
+    telefono = Column(String, nullable=True)  # contacto para coordinar la visita
     origen = Column(String, nullable=False, default="manual")  # ver ORIGEN_CASO
-    correo_msg_id = Column(String, nullable=True)  # link al correo de intake (Fase 3 / Hermes)
+    fuente = Column(String, nullable=True)  # quién/qué originó (adultomayor, jurídica, personería, redes…)
+    remitente = Column(String, nullable=True)  # correo del abogado/área que remite (a quién responder)
+    asunto = Column(Text, nullable=True)
+    correo_msg_id = Column(String, nullable=True)  # link al correo de intake (Hermes)
     estado = Column(String, nullable=False, default="recibido", index=True)  # ver ESTADO_CASO
     resultado = Column(String, nullable=True)  # ver RESULTADO_CASO (al resolver)
     observacion = Column(Text, nullable=True)  # nota breve de cierre / WhatsApp
-    enviado_juridica = Column(Boolean, nullable=False, default=False)  # concepto remitido a oficina jurídica
+    enviado_juridica = Column(Boolean, nullable=False, default=False)
+    pqrd_respondido = Column(Boolean, nullable=False, default=False)  # estado de respuesta PQRD (matriz)
+    # --- Trazabilidad de hitos ---
+    fecha_recibido = Column(Date, nullable=True)        # primer correo / ingreso
+    fecha_acta_recibida = Column(Date, nullable=True)   # acta/soportes de centrodbienestar2019
+    fecha_respuesta = Column(Date, nullable=True)       # mi respuesta al abogado remitente
+    fecha_vence = Column(Date, nullable=True)           # vencimiento, si aplica
     asignado_a = Column(UUID(as_uuid=False), ForeignKey("usuarios.id"), nullable=True)
     creado_por = Column(UUID(as_uuid=False), ForeignKey("usuarios.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)

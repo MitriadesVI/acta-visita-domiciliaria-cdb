@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Caso, Usuario
 from ..deps import get_current_user, require_roles
-from ..schemas import CasoCreate, CasoUpdate, CasoOut
+from ..schemas import CasoCreate, CasoUpdate, CasoOut, CasoSyncItem, SyncResult
 
 router = APIRouter(prefix="/casos", tags=["casos"])
 
@@ -30,13 +30,42 @@ def crear(
     db: Session = Depends(get_db),
     user: Usuario = Depends(require_roles("admin", "coordinador")),
 ):
-    if db.query(Caso).filter(Caso.codigo == data.codigo).first():
-        raise HTTPException(400, "Ya existe un caso con ese código")
+    # El radicado es opcional (oficio/redes). Solo se valida duplicado si viene.
+    if data.codigo and db.query(Caso).filter(Caso.codigo == data.codigo).first():
+        raise HTTPException(400, "Ya existe un caso con ese radicado")
     caso = Caso(**data.model_dump(), creado_por=user.id)
     db.add(caso)
     db.commit()
     db.refresh(caso)
     return caso
+
+
+@router.post("/sync", response_model=SyncResult)
+def sync(
+    items: list[CasoSyncItem],
+    db: Session = Depends(get_db),
+    user: Usuario = Depends(require_roles("admin", "coordinador")),
+):
+    """Upsert por radicado para el puente (Sheet/Gmail -> app). Idempotente:
+    los casos sin radicado se omiten (esos se crean a mano en la app)."""
+    creados = actualizados = omitidos = 0
+    for item in items:
+        data = item.model_dump(exclude_unset=True)
+        codigo = data.get("codigo")
+        if not codigo:
+            omitidos += 1
+            continue
+        existing = db.query(Caso).filter(Caso.codigo == codigo).first()
+        if existing:
+            for k, v in data.items():
+                if v is not None:  # no sobreescribir con nulos
+                    setattr(existing, k, v)
+            actualizados += 1
+        else:
+            db.add(Caso(**data, creado_por=user.id))
+            creados += 1
+    db.commit()
+    return SyncResult(creados=creados, actualizados=actualizados, omitidos=omitidos)
 
 
 @router.get("/{caso_id}", response_model=CasoOut)

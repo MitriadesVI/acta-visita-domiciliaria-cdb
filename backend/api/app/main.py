@@ -5,7 +5,7 @@ from .config import settings
 from .database import Base, engine
 from .seed import crear_admin_inicial
 from .storage import ensure_bucket
-from .routers import auth, usuarios, casos, visitas, actas
+from .routers import auth, usuarios, casos, visitas, actas, dashboard
 
 app = FastAPI(title="Acta Visita Domiciliaria API", version="1.0.0")
 
@@ -36,3 +36,4 @@ app.include_router(usuarios.router)
 app.include_router(casos.router)
 app.include_router(visitas.router)
 app.include_router(actas.router)
+app.include_router(dashboard.router)

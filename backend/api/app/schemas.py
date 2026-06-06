@@ -37,18 +37,27 @@ class UsuarioOut(UsuarioBase):
 
 # ---- Casos ----
 class CasoBase(BaseModel):
-    codigo: str
+    codigo: Optional[str] = None  # radicado (opcional: oficio/redes no traen)
+    radicados_relacionados: Optional[str] = None
     nombre_adulto_mayor: Optional[str] = None
     documento: Optional[str] = None
     direccion: Optional[str] = None
     barrio: Optional[str] = None
-    fecha_recibido: Optional[date] = None
+    telefono: Optional[str] = None
     origen: str = "manual"
+    fuente: Optional[str] = None
+    remitente: Optional[str] = None
+    asunto: Optional[str] = None
     correo_msg_id: Optional[str] = None
     estado: str = "recibido"
     resultado: Optional[str] = None
     observacion: Optional[str] = None
     enviado_juridica: bool = False
+    pqrd_respondido: bool = False
+    fecha_recibido: Optional[date] = None
+    fecha_acta_recibida: Optional[date] = None
+    fecha_respuesta: Optional[date] = None
+    fecha_vence: Optional[date] = None
     asignado_a: Optional[str] = None
 
 
@@ -57,15 +66,26 @@ class CasoCreate(CasoBase):
 
 
 class CasoUpdate(BaseModel):
+    codigo: Optional[str] = None
+    radicados_relacionados: Optional[str] = None
     nombre_adulto_mayor: Optional[str] = None
     documento: Optional[str] = None
     direccion: Optional[str] = None
     barrio: Optional[str] = None
-    fecha_recibido: Optional[date] = None
+    telefono: Optional[str] = None
+    origen: Optional[str] = None
+    fuente: Optional[str] = None
+    remitente: Optional[str] = None
+    asunto: Optional[str] = None
     estado: Optional[str] = None
     resultado: Optional[str] = None
     observacion: Optional[str] = None
     enviado_juridica: Optional[bool] = None
+    pqrd_respondido: Optional[bool] = None
+    fecha_recibido: Optional[date] = None
+    fecha_acta_recibida: Optional[date] = None
+    fecha_respuesta: Optional[date] = None
+    fecha_vence: Optional[date] = None
     asignado_a: Optional[str] = None
 
 
@@ -75,6 +95,17 @@ class CasoOut(CasoBase):
     creado_por: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+
+# Para el puente Sheet/Gmail -> app (upsert por radicado).
+class CasoSyncItem(CasoBase):
+    pass
+
+
+class SyncResult(BaseModel):
+    creados: int
+    actualizados: int
+    omitidos: int
 
 
 # ---- Visitas ----

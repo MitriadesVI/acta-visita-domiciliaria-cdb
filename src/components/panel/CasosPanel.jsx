@@ -11,12 +11,8 @@ const ESTADOS = [
   ['resuelto', 'Resuelto'],
   ['cerrado', 'Cerrado']
 ];
-const RESULTADOS = [
-  ['', '—'],
-  ['aplica', 'Aplica'],
-  ['no_aplica', 'No aplica'],
-  ['remitir', 'Remitir']
-];
+const RESULTADOS = [['', '—'], ['aplica', 'Aplica'], ['no_aplica', 'No aplica'], ['remitir', 'Remitir']];
+const ORIGENES = [['correo', 'Correo'], ['oficio', 'Oficio'], ['redes', 'Redes'], ['manual', 'Manual']];
 
 const colorEstado = {
   recibido: 'bg-gray-200 text-gray-800',
@@ -29,7 +25,8 @@ const colorEstado = {
 };
 
 const vacio = {
-  codigo: '', nombre_adulto_mayor: '', documento: '', direccion: '', barrio: '', fecha_recibido: '', asignado_a: ''
+  codigo: '', nombre_adulto_mayor: '', documento: '', direccion: '', barrio: '', telefono: '',
+  origen: 'correo', fuente: '', remitente: '', fecha_recibido: '', fecha_vence: '', asignado_a: ''
 };
 
 const CasosPanel = () => {
@@ -61,13 +58,10 @@ const CasosPanel = () => {
   }, [filtro]);
 
   const crear = async () => {
-    if (!form.codigo) {
-      setError('El radicado (código) es obligatorio');
-      return;
-    }
     setError('');
     try {
-      const payload = { ...form, fecha_recibido: form.fecha_recibido || null, asignado_a: form.asignado_a || null };
+      const payload = {};
+      Object.entries(form).forEach(([k, v]) => { payload[k] = v === '' ? null : v; });
       await createCaso(payload);
       setForm(vacio);
       setMostrarForm(false);
@@ -82,7 +76,13 @@ const CasosPanel = () => {
     recargar();
   };
 
-  const nombreTecnico = (id) => tecnicos.find((t) => t.id === id)?.nombre || tecnicos.find((t) => t.id === id)?.email || '—';
+  const F = ({ caso, campo, label }) => (
+    <label className="text-xs text-gray-500">{label}
+      <input type="date" defaultValue={caso[campo] || ''}
+        onChange={(e) => patch(caso.id, { [campo]: e.target.value || null })}
+        className="ml-1 rounded border-gray-300 border p-1 text-xs" />
+    </label>
+  );
 
   return (
     <div>
@@ -106,22 +106,36 @@ const CasosPanel = () => {
 
       {mostrarForm && (
         <div className="bg-gray-50 border border-gray-200 rounded-md p-3 mb-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Radicado (ej. EXT-QUILLA-2026-0111019)"
+          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Radicado (opcional — oficio/redes no traen)"
             value={form.codigo} onChange={(e) => setForm({ ...form, codigo: e.target.value })} />
+          <select className="rounded border-gray-300 border p-2 text-sm" value={form.origen}
+            onChange={(e) => setForm({ ...form, origen: e.target.value })}>
+            {ORIGENES.map(([v, l]) => <option key={v} value={v}>Origen: {l}</option>)}
+          </select>
           <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Nombre de la persona mayor"
             value={form.nombre_adulto_mayor} onChange={(e) => setForm({ ...form, nombre_adulto_mayor: e.target.value })} />
-          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Documento"
+          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Documento / CC"
             value={form.documento} onChange={(e) => setForm({ ...form, documento: e.target.value })} />
-          <input className="rounded border-gray-300 border p-2 text-sm sm:col-span-2" placeholder="Dirección"
+          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Teléfono de contacto"
+            value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
+          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Dirección"
             value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} />
           <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Barrio"
             value={form.barrio} onChange={(e) => setForm({ ...form, barrio: e.target.value })} />
-          <label className="text-sm text-gray-600 flex items-center gap-2">Recibido:
+          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Fuente (adultomayor, jurídica…)"
+            value={form.fuente} onChange={(e) => setForm({ ...form, fuente: e.target.value })} />
+          <input className="rounded border-gray-300 border p-2 text-sm" placeholder="Remitente (a quién responder)"
+            value={form.remitente} onChange={(e) => setForm({ ...form, remitente: e.target.value })} />
+          <label className="text-sm text-gray-600 flex items-center gap-1">Recibido:
             <input type="date" className="rounded border-gray-300 border p-1.5 text-sm flex-1"
               value={form.fecha_recibido} onChange={(e) => setForm({ ...form, fecha_recibido: e.target.value })} />
           </label>
-          <select className="rounded border-gray-300 border p-2 text-sm"
-            value={form.asignado_a} onChange={(e) => setForm({ ...form, asignado_a: e.target.value })}>
+          <label className="text-sm text-gray-600 flex items-center gap-1">Vence:
+            <input type="date" className="rounded border-gray-300 border p-1.5 text-sm flex-1"
+              value={form.fecha_vence} onChange={(e) => setForm({ ...form, fecha_vence: e.target.value })} />
+          </label>
+          <select className="rounded border-gray-300 border p-2 text-sm" value={form.asignado_a}
+            onChange={(e) => setForm({ ...form, asignado_a: e.target.value })}>
             <option value="">Sin asignar</option>
             {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre || t.email}</option>)}
           </select>
@@ -139,9 +153,9 @@ const CasosPanel = () => {
             <div key={c.id} className="border border-gray-200 rounded-lg p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="font-medium">{c.codigo}</p>
-                  <p className="text-sm text-gray-600">{c.nombre_adulto_mayor || 'Sin nombre'}{c.documento ? ` · ${c.documento}` : ''}</p>
-                  <p className="text-xs text-gray-500">{c.direccion || ''}{c.barrio ? ` · ${c.barrio}` : ''}</p>
+                  <p className="font-medium">{c.codigo || '(sin radicado)'} <span className="text-xs font-normal text-gray-400">· {c.origen}</span></p>
+                  <p className="text-sm text-gray-600">{c.nombre_adulto_mayor || 'Sin nombre'}{c.documento ? ` · ${c.documento}` : ''}{c.telefono ? ` · ☎ ${c.telefono}` : ''}</p>
+                  <p className="text-xs text-gray-500">{c.direccion || ''}{c.barrio ? ` · ${c.barrio}` : ''}{c.fuente ? ` · fuente: ${c.fuente}` : ''}</p>
                 </div>
                 <span className={`text-xs font-medium px-2 py-1 rounded ${colorEstado[c.estado] || ''}`}>
                   {ESTADOS.find(([v]) => v === c.estado)?.[1] || c.estado}
@@ -150,38 +164,39 @@ const CasosPanel = () => {
 
               <div className="flex flex-wrap items-center gap-2 mt-3 text-sm">
                 <label className="text-gray-600">Estado:
-                  <select value={c.estado} onChange={(e) => patch(c.id, { estado: e.target.value })}
-                    className="ml-1 rounded border-gray-300 border p-1 text-xs">
+                  <select value={c.estado} onChange={(e) => patch(c.id, { estado: e.target.value })} className="ml-1 rounded border-gray-300 border p-1 text-xs">
                     {ESTADOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </label>
                 <label className="text-gray-600">Asignado:
-                  <select value={c.asignado_a || ''} onChange={(e) => patch(c.id, { asignado_a: e.target.value || null })}
-                    className="ml-1 rounded border-gray-300 border p-1 text-xs">
+                  <select value={c.asignado_a || ''} onChange={(e) => patch(c.id, { asignado_a: e.target.value || null })} className="ml-1 rounded border-gray-300 border p-1 text-xs">
                     <option value="">Sin asignar</option>
                     {tecnicos.map((t) => <option key={t.id} value={t.id}>{t.nombre || t.email}</option>)}
                   </select>
                 </label>
                 <label className="text-gray-600">Resultado:
-                  <select value={c.resultado || ''} onChange={(e) => patch(c.id, { resultado: e.target.value || null })}
-                    className="ml-1 rounded border-gray-300 border p-1 text-xs">
+                  <select value={c.resultado || ''} onChange={(e) => patch(c.id, { resultado: e.target.value || null })} className="ml-1 rounded border-gray-300 border p-1 text-xs">
                     {RESULTADOS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </label>
                 <label className="text-gray-600 flex items-center gap-1">
-                  <input type="checkbox" checked={c.enviado_juridica || false}
-                    onChange={(e) => patch(c.id, { enviado_juridica: e.target.checked })} />
-                  Enviado a jurídica
+                  <input type="checkbox" checked={c.enviado_juridica || false} onChange={(e) => patch(c.id, { enviado_juridica: e.target.checked })} /> Enviado a jurídica
                 </label>
               </div>
 
+              {/* Trazabilidad de hitos */}
+              <div className="flex flex-wrap items-center gap-3 mt-2 pt-2 border-t border-gray-100">
+                <F caso={c} campo="fecha_recibido" label="📥 Recibido:" />
+                <F caso={c} campo="fecha_acta_recibida" label="📋 Acta:" />
+                <F caso={c} campo="fecha_respuesta" label="✉️ Respuesta:" />
+                <F caso={c} campo="fecha_vence" label="⏰ Vence:" />
+              </div>
+
               <div className="mt-2">
-                <input
-                  className="w-full rounded border-gray-300 border p-1.5 text-sm"
+                <input className="w-full rounded border-gray-300 border p-1.5 text-sm"
                   placeholder="Observación / nota de cierre (ej. No aplica, remitir a Comisaría…)"
                   defaultValue={c.observacion || ''}
-                  onBlur={(e) => { if (e.target.value !== (c.observacion || '')) patch(c.id, { observacion: e.target.value }); }}
-                />
+                  onBlur={(e) => { if (e.target.value !== (c.observacion || '')) patch(c.id, { observacion: e.target.value }); }} />
               </div>
             </div>
           ))}

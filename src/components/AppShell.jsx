@@ -1,11 +1,12 @@
 "use client";
 import React, { useState } from 'react';
-import { FileText, Folder, CalendarDays, Users, LogIn, LogOut } from 'lucide-react';
+import { FileText, Folder, CalendarDays, Users, LayoutDashboard, LogIn, LogOut } from 'lucide-react';
 import { AuthProvider, useAuth } from '@/lib/authContext';
 import ActaVisitaDomiciliaria from './ActaVisitaDomiciliaria';
 import CasosPanel from './panel/CasosPanel';
 import AgendaPanel from './panel/AgendaPanel';
 import AdminUsuarios from './panel/AdminUsuarios';
+import TableroPanel from './panel/TableroPanel';
 
 function LoginInline() {
   const { login } = useAuth();
@@ -46,6 +47,7 @@ function Shell() {
 
   const tabs = [
     { id: 'acta', label: 'Acta', icon: FileText, show: true },
+    { id: 'tablero', label: 'Tablero', icon: LayoutDashboard, show: esCoordinacion },
     { id: 'casos', label: 'Casos', icon: Folder, show: esCoordinacion },
     { id: 'agenda', label: 'Agenda', icon: CalendarDays, show: esCoordinacion },
     { id: 'usuarios', label: 'Usuarios', icon: Users, show: esAdmin }
@@ -88,6 +90,7 @@ function Shell() {
         {seccionValida === 'acta' && <ActaVisitaDomiciliaria />}
         {seccionValida !== 'acta' && (
           <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-sm p-6">
+            {seccionValida === 'tablero' && <TableroPanel onAbrirCasos={() => setSeccion('casos')} />}
             {seccionValida === 'casos' && <CasosPanel />}
             {seccionValida === 'agenda' && <AgendaPanel />}
             {seccionValida === 'usuarios' && <AdminUsuarios />}

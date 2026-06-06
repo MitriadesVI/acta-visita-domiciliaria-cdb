@@ -65,6 +65,9 @@ export const listCasos = (estado) => request(`/casos${estado ? `?estado=${encode
 export const createCaso = (data) => request('/casos', { method: 'POST', body: data });
 export const updateCaso = (id, data) => request(`/casos/${id}`, { method: 'PATCH', body: data });
 
+// ---- Dashboard ----
+export const getPendientes = () => request('/dashboard/pendientes');
+
 // ---- Visitas ----
 export const listVisitas = () => request('/visitas');
 export const createVisita = (data) => request('/visitas', { method: 'POST', body: data });

@@ -12,7 +12,6 @@ import EvidenciaFotografica from './EvidenciaFotografica';
 import FirmaAutorizacion from './FirmaAutorizacion';
 import MisActas from './MisActas';
 import useFormData from '@/components/hooks/useFormData';
-import { generarActaPdf } from '@/lib/generarActaPdf';
 import { guardarActa, obtenerActa, tieneDatos, ESTADOS } from '@/lib/actasDb';
 // Importar directamente las constantes
 import { HEADER_LOGO, FOOTER_BANNER } from './logoimages';
@@ -39,7 +38,6 @@ const ActaVisitaDomiciliaria = () => {
   const [vista, setVista] = useState('editor'); // 'editor' | 'lista'
   const [actaId, setActaId] = useState(null);
   const [estado, setEstado] = useState('borrador');
-  const [generandoPdf, setGenerandoPdf] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [guardadoEn, setGuardadoEn] = useState(null);
 
@@ -115,21 +113,10 @@ const ActaVisitaDomiciliaria = () => {
   };
 
   const handleImprimir = () => {
-    // Sin campos obligatorios: el acta puede imprimirse aunque falten datos
-    // (frecuente cuando no se encuentra a la persona, la dirección, etc.).
+    // Imprime el acta tal cual el formulario (membrete, secciones, firmas y
+    // fotos). En el diálogo del navegador puedes elegir "Guardar como PDF".
+    // Sin campos obligatorios: se puede imprimir aunque falten datos.
     window.print();
-  };
-
-  const handleDescargarPdf = async () => {
-    setGenerandoPdf(true);
-    try {
-      await generarActaPdf(formData);
-    } catch (error) {
-      console.error('Error al generar el PDF:', error);
-      alert('Ocurrió un error al generar el PDF. Revisa la consola para más detalle.');
-    } finally {
-      setGenerandoPdf(false);
-    }
   };
 
   if (vista === 'lista') {
@@ -203,7 +190,7 @@ const ActaVisitaDomiciliaria = () => {
 
         {/* Título y contenido del formulario */}
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-          <div className="print:break-inside-avoid">
+          <div>
             <DatosVisita
               datosVisita={formData.datosVisita}
               datosFuncionario={formData.datosFuncionario}
@@ -212,14 +199,14 @@ const ActaVisitaDomiciliaria = () => {
             />
           </div>
 
-          <div className="print:break-inside-avoid">
+          <div>
             <IdentificacionAdultoMayor
               datosAdultoMayor={formData.datosAdultoMayor}
               updateDatosAdultoMayor={updateDatosAdultoMayor}
             />
           </div>
 
-          <div className="print:break-inside-avoid">
+          <div>
             <DatosFamiliar
               datosFamiliares={formData.datosFamiliares}
               updateDatosFamiliares={updateDatosFamiliares}
@@ -228,28 +215,28 @@ const ActaVisitaDomiciliaria = () => {
             />
           </div>
 
-          <div className="print:break-inside-avoid">
+          <div>
             <ContextoFamiliar
               situacionEncontrada={formData.situacionEncontrada}
               updateSituacionEncontrada={updateSituacionEncontrada}
             />
           </div>
 
-          <div className="print:break-inside-avoid">
+          <div>
             <CondicionesSalud
               antecedentesClinico={formData.antecedentesClinico}
               updateAntecedentesClinico={updateAntecedentesClinico}
             />
           </div>
 
-          <div className="print:break-inside-avoid">
+          <div>
             <Observaciones
               observaciones={formData.observaciones}
               updateObservaciones={updateObservaciones}
             />
           </div>
 
-          <div className="print:break-inside-avoid">
+          <div>
             <EvidenciaFotografica
               fotos={formData.fotos}
               updateFotos={updateFotos}
@@ -265,18 +252,10 @@ const ActaVisitaDomiciliaria = () => {
           <div className="flex flex-wrap justify-end gap-4 mt-6 print:hidden">
             <button
               type="button"
-              disabled={generandoPdf}
-              className="bg-indigo-600 text-white rounded-md px-6 py-2 font-medium hover:bg-indigo-700 disabled:opacity-60"
-              onClick={handleDescargarPdf}
-            >
-              {generandoPdf ? 'Generando PDF…' : 'Descargar PDF'}
-            </button>
-            <button
-              type="button"
-              className="bg-gray-300 text-gray-800 rounded-md px-6 py-2 font-medium hover:bg-gray-400"
+              className="bg-indigo-600 text-white rounded-md px-6 py-2 font-medium hover:bg-indigo-700"
               onClick={handleImprimir}
             >
-              Imprimir
+              Imprimir / Guardar PDF
             </button>
             <button
               type="submit"
